@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Notes App</title>
+</head>
+
+<body>
+
+<h1>NOTES</h1>
+<div id="list"></div>
+
+<button class="fab" onclick="openPopup()">+</button>
+
+<div id="popup" class="popup" onclick="outsideClick(event)">
+  <div class="popup-content">
+    <h2 id="popupTitle" style="color: #C1856D;">Tambah Catatan</h2>
+
+    <input type="text" id="judulPopup" placeholder="Judul">
+    <textarea id="isiPopup" placeholder="Isi catatan"></textarea>
+
+    <button onclick="simpanNote()">Simpan</button>
+    <button onclick="closePopup()" class="close-btn">Batal</button>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api/notes';
+let editId = null;
+
+async function loadNotes() {
+  const res = await fetch(API);
+  const data = await res.json();
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  data.forEach(note => {
+    const div = document.createElement('div');
+    div.className = 'note';
+
+    div.innerHTML = `
+      <h3 style="color: grey;">${note.judul}</h3>
+      <p style="color: grey; font-size: 13px;">${note.isi}</p>
+      <small style="color: grey;">
+        ${new Date(note.tanggal_dibuat).toLocaleString()}
+      </small><br><br>
+    `;
+
+    const btnEdit = document.createElement('button');
+    btnEdit.innerText = 'Edit';
+    btnEdit.onclick = () => openEditPopup(note);
+
+    const btnHapus = document.createElement('button');
+    btnHapus.innerText = 'Hapus';
+    btnHapus.onclick = () => hapusNote(note.id);
+
+    div.appendChild(btnEdit);
+    div.appendChild(btnHapus);
+
+    list.appendChild(div);
+  });
+}
+
+function openPopup() {
+  editId = null;
+  document.getElementById('popupTitle').innerText = 'Tambah Catatan';
+  document.getElementById('popup').style.display = 'flex';
+}
+
+function closePopup() {
+  document.getElementById('popup').style.display = 'none';
+
+  editId = null;
+  document.getElementById('judulPopup').value = '';
+  document.getElementById('isiPopup').value = '';
+}
+
+function outsideClick(event) {
+  if (event.target.id === 'popup') {
+    closePopup();
+  }
+}
+
+function openEditPopup(note) {
+  editId = note.id;
+
+  document.getElementById('judulPopup').value = note.judul;
+  document.getElementById('isiPopup').value = note.isi;
+  document.getElementById('popupTitle').innerText = 'Edit Catatan';
+
+  document.getElementById('popup').style.display = 'flex';
+}
+
+async function simpanNote() {
+  const judul = document.getElementById('judulPopup').value;
+  const isi = document.getElementById('isiPopup').value;
+
+  if (!judul || !isi) {
+    alert('Judul dan isi wajib diisi!');
+    return;
+  }
+
+  if (editId) {
+    await fetch(`${API}/${editId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ judul, isi })
+    });
+  } else {
+    await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ judul, isi })
+    });
+  }
+
+  closePopup();
+  loadNotes();
+}
+
+async function hapusNote(id) {
+  if (!confirm('Yakin mau hapus?')) return;
+
+  await fetch(`${API}/${id}`, { method: 'DELETE' });
+  loadNotes();
+}
+
+// buat init
+loadNotes();
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closePopup();
+  }
+});
+</script>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 20px;
+      background-color: #FAF7F3;
+    }
+
+    h1 {
+      text-align: left;
+      color: grey;
+    }
+
+    .note {
+      background: #F0E4D3;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .note button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+      margin-right: 5px;
+    }
+
+    .note button:first-of-type {
+      background-color: #DCC5B2;
+    }
+
+    .note button:last-of-type {
+      background-color: #C1856D;
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 30px;
+      background-color: grey;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      z-index: 999;
+      transition: 0.2s;
+    }
+
+    .fab:hover {
+      transform: scale(1.1);
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 20px;
+      width: 300px;
+      border-radius: 10px;
+      text-align: center;
+      animation: fadeIn 0.3s;
+    }
+
+    .popup input,
+    .popup textarea {
+      width: 100%;
+      color: grey;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    .popup button {
+      margin-top: 5px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #C1856D;
+      color: white;
+    }
+
+    .close-btn {
+      background-color: gray;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+
+</body>
+</html>
