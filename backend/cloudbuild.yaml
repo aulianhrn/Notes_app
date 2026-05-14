@@ -14,7 +14,7 @@ steps:
     args:
       [
         'push',
-        'gcr.io/$PROJECT_ID/otes-be-123230047'
+        'gcr.io/$PROJECT_ID/notes-be-123230047'
       ]
 
   # Deploy ke Cloud Run
