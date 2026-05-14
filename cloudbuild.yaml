@@ -1,12 +1,13 @@
 steps:
   # Deploy Frontend ke App Engine
-  - name: 'gcr.io/google.com/cloudsdktools/cloud-sdk'
-    entrypoint: "bash"
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
     args:
       [
         '-c',
         'gcloud config set app/cloud_build_timeout 1600 && gcloud app deploy',
       ]
+
 timeout: '1600s'
 
 options:
