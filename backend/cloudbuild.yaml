@@ -1,17 +1,16 @@
 steps:
   # Build Docker Image
   - name: 'gcr.io/cloud-builders/docker'
+    dir: 'backend'
     args:
       [
         'build',
         '-t',
         'gcr.io/$PROJECT_ID/notes-be-123230047',
-        '-f',
-        'backend/Dockerfile',
-        './backend'
+        '.'
       ]
 
-  # Push Docker Image ke Container Registry
+  # Push Docker Image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       [
